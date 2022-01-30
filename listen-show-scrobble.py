@@ -11,10 +11,10 @@ from selenium.webdriver.chrome.options import Options
 import sys
 import pylast
 
-API_KEY = "c30532eb25c2bd740d0251d692e1f09f"
-API_SECRET = "918479efb57abff6e23db0209f234914"
-USERNAME = "janbenes"
-PASSWORD = "Jb842652+"
+API_KEY = "---last.fm-API---"
+API_SECRET = "---last.fm-SECRET---"
+USERNAME = "username"
+PASSWORD = "password"
 
 homepath = os.path.expanduser("~")
 
