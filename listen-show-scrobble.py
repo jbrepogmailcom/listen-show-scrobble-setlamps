@@ -78,7 +78,7 @@ while True:
 			timestart = time.time()	
 		else:
 			if lasttrack != name:
-				timestart = time.time
+				timestart = time.time()
 				browser.refresh()
 
 		#Scrobble now playing
