@@ -1,5 +1,6 @@
 # listen-show-scrobble
 Python script that listens by microphone what you play, obtains track details from Shazam, displays fullscreen album art and scrobbles to last.fm
+<br>HTML page is optimized only for 1920x1080 resolution. If you want to use it on other display then change songhtml1.html
 
 <h1>Installation:</h1>
 
