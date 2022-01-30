@@ -25,6 +25,8 @@ timestart = time.time()
 anythingplayed = 0
 name = ""
 lastscrobbled = ""
+offset = 0
+lastoffset = 0
 
 #run forever
 while True:
@@ -40,7 +42,7 @@ while True:
 	
 	# Get values
 	resp2 = resp[1]
-	print(resp2)
+	#print(resp2)
 	#print("Length:")
 	#print(len(resp2))
 	#print("end.")
@@ -49,6 +51,7 @@ while True:
 		name = resp2["track"]["title"]		
 		artist = resp2["track"]["subtitle"]
 		coverurl = resp2["track"]["images"]["coverarthq"]
+		offset = resp2["matches"][0]["offset"]		
 		
 		# Get image
 		urllib.request.urlretrieve(coverurl, homepath+"/albumimage.jpg")
@@ -76,9 +79,11 @@ while True:
 			firstloop = 0
 			anythingplayed = 1
 			timestart = time.time()	
+			lastoffset = offset
 		else:
 			if lasttrack != name:
-				timestart = time.time()
+				lastoffset = offset
+				#timestart = time.time()
 				browser.refresh()
 
 		#Scrobble now playing
@@ -94,8 +99,9 @@ while True:
 	if lasttrack != name:
 		timenow = time.time()
 		if (anythingplayed == 1) and (lastscrobbled != lasttrack) and (len(lasttrack) > 0) and ((timenow - timestart) > 180):
-			#print("Scrobbling last track: ",lasttrack)
-			network.scrobble(artist = lastartist, title = lasttrack, timestamp = timestart)
+			print("Scrobbling last track: ",lasttrack)
+			trackstart = timenow - lastoffset			
+			network.scrobble(artist = lastartist, title = lasttrack, timestamp = trackstart)
 			lastscrobbled = lasttrack
 			timestart = time.time()	
 		lasttrack = name
