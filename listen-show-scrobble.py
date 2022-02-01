@@ -3,18 +3,25 @@ import subprocess
 import os
 import time
 import urllib.request
-from PIL import Image
+from PIL import Image, ImageOps
 from pathlib import Path
 from selenium.common.exceptions import WebDriverException
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import sys
 import pylast
+from io import BytesIO
+from collections import Counter
+import statistics
+from colorthief import ColorThief
+import numpy as np
+import json
+import requests
 
-API_KEY = "---last.fm-API---"
-API_SECRET = "---last.fm-SECRET---"
-USERNAME = "username"
-PASSWORD = "password"
+API_KEY = "___________"
+API_SECRET = "____________"
+USERNAME = "_________"
+PASSWORD = "_________"
 
 homepath = os.path.expanduser("~")
 
@@ -29,6 +36,9 @@ offset = 0
 lastoffset = 0
 correctscrobbles = 0
 prevname = ""
+album_url_old = ""
+lapse_timer = 0
+
 
 #run forever
 while True:
@@ -40,14 +50,16 @@ while True:
 	ftr = open(homepath+'/test-mic.wav', 'rb').read()
 	shazam = Shazam(ftr)
 	recognize_generator = shazam.recognizeSong()
-	resp = next(recognize_generator)
+	resp_shazam = next(recognize_generator)
 	
 	# Get values
-	resp2 = resp[1]
+	resp2 = resp_shazam[1]
 	#print(resp2)
 	#print("Length:")
 	#print(len(resp2))
 	#print("end.")
+	
+	selected_color = 1  # assume you will get the color
 	
 	if len(resp2) > 5:
 		name = resp2["track"]["title"]		
@@ -91,6 +103,68 @@ while True:
 				lastoffset = offset
 				#timestart = time.time()
 				browser.refresh()
+
+      #Set lamps
+		resp = requests.get(coverurl)
+		assert resp.ok
+		img = Image.open(BytesIO(resp.content))
+		
+		img2 = ImageOps.posterize(img.convert('RGB'), bits=4)
+		
+		img2.save("test.png")
+		
+		img4 = ColorThief("test.png")
+		
+		dominant_color = img4.get_color(quality=1)
+		
+		vr,vb,vg = dominant_color
+		#print(type(dominant_color))
+		print("Dominant color: ",vr,vb,vg)
+		#print("Resp: ",resp,", TYPE: ",type(resp))
+		
+		list_of_colors = [[255,255,255],[255,0,0],[0,255,0],[0,0,255],[255,255,0],[0,255,255],[255,143,191],[255,215,0],[255,0,255],[255,127,80]]
+		ha_list_of_colors = [[0,0,127],[0,0,255],[0,127,0],[0,127,127],[0,127,255],[0,255,0],[0,255,127],[0,255,255],[127,0,0],[127,0,127],[127,0,255],[127,127,0],[127,127,255],[127,255,0],[127,255,127],[127,255,255],[255,0,0],[255,0,127],[255,0,255],[255,127,0],[255,127,127],[255,127,255],[255,255,0],[255,255,127]]
+		color = [vr,vb,vg]
+		
+		def closest(colors,color):
+			colors = np.array(colors)
+			color = np.array(color)
+			distances = np.sqrt(np.sum((colors-color)**2,axis=1))
+			index_of_smallest = np.where(distances==np.amin(distances))
+			smallest_distance = colors[index_of_smallest]
+			return smallest_distance
+		
+		closest_color = closest(ha_list_of_colors,color) # for home assistant changed to ha_list_of_colors
+		print("Closest color: ",closest_color )
+		#print("Index1: ", closest_color[0][2])
+		
+		main_color = "pink"
+		if(np.array_equal(closest_color,np.asarray([[255,255,255]]))): main_color="white"
+		if(np.array_equal(closest_color,np.asarray([[255,0,0]]))): main_color="red"
+		if(np.array_equal(closest_color,np.asarray([[0,255,0]]))): main_color="green"
+		if(np.array_equal(closest_color,np.asarray([[0,0,255]]))): main_color="blue"
+		if(np.array_equal(closest_color,np.asarray([[255,255,0]]))): main_color="yellow"
+		if(np.array_equal(closest_color,np.asarray([[0,255,255]]))): main_color="cyan"
+		if(np.array_equal(closest_color,np.asarray([[255,143,191]]))): main_color="pink"
+		if(np.array_equal(closest_color,np.asarray([[255,215,0]]))): main_color="gold"
+		if(np.array_equal(closest_color,np.asarray([[255,0,255]]))): main_color="purple"
+		if(np.array_equal(closest_color,np.asarray([[255,127,80]]))): main_color="orange"
+		
+		ha_url = "http://_____IP ADDRESS OF YOUR HOME ASSISTANT SERVER_____:8123/api/services/light/turn_on"
+		ha_headers = {"Authorization": "Bearer ________HA_AUTHORIZATION_KEY______________-fR-o", "content-type": "application/json",}
+		if (selected_color == 1):
+			ha_data = {"entity_id": "light.____ENTITY_1____", "rgb_color": [int(closest_color[0][0]),int(closest_color[0][1]),int(closest_color[0][2])]} # "brightness": 150}
+			ha_data2 = {"entity_id": "light.____ENTITY_2____", "rgb_color": [int(closest_color[0][0]),int(closest_color[0][1]),int(closest_color[0][2])]} # "brightness": 255}
+		else:
+			ha_data = {"entity_id": "light.____ENTITY_1____", "rgb_color": [50,50,10],} # "brightness": 50}
+			ha_data2 = {"entity_id": "light.____ENTITY_2____", "rgb_color": [50,50,10],} # "brightness": 50}
+		#print("Calling "+bulb_url)
+		print("Calling "+ha_url)
+		print("headers: ",ha_headers)
+		print("data: ",ha_data)
+		ha_resp = requests.post(ha_url, headers=ha_headers, json=ha_data)
+		ha_resp2 = requests.post(ha_url, headers=ha_headers, json=ha_data2)
+		print(ha_resp)
 
 		#Scrobble now playing
 		network = pylast.LastFMNetwork(api_key = API_KEY, api_secret = API_SECRET, username = USERNAME, password_hash = pylast.md5(PASSWORD))
