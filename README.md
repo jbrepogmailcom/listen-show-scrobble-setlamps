@@ -9,7 +9,7 @@ Python script that listens by microphone what you play, obtains track details fr
 <li>install all necessary libraries in #includes</li>
 <li>get last.fm API key and secret and fill it into py code</li>
 <li>get authorization key from Home Assistant and codes of entities you want to control and insert it to code</li>  
-<li>allow listen-loop.sh to run: sudo chmod +x listen-loop.sh</li>
+<li>listen-loop.sh wrapper directs temporary sound captures to ramdisk and performs sanity clean and restart if there is error</li>
 <li>install chromium and get proper location by whereis chromium and modify py script if necessary</li>
 </ul>
 
