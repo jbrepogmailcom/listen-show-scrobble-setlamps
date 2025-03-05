@@ -3,7 +3,13 @@ import subprocess
 import os
 import time
 import urllib.request
-from PIL import Image, ImageOps
+
+from PIL import Image, ImageOps, ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
+from bdb import BdbQuit
+
+#from PIL import Image, ImageOps
 from pathlib import Path
 from selenium.common.exceptions import WebDriverException
 from selenium import webdriver
@@ -76,10 +82,10 @@ def control_light(correction_factor, light_sensor_name, red, green, blue):
     #x, y = apply_linear_correction(xtmp,ytmp)
 
     # Define the MQTT server settings
-    mqtt_server = "IP"
+    mqtt_server = "your_mqtt_server_address"
     mqtt_port = 1883
-    mqtt_user = ""
-    mqtt_password = ""
+    mqtt_user = "your_mqtt_username"
+    mqtt_password = "your_mqtt_password"
     mqtt_timeout = 60  # Ensure timeout is set correctly
 
     # Calculate brightness from the RGB values (simple average for demonstration)
@@ -118,10 +124,10 @@ def control_light(correction_factor, light_sensor_name, red, green, blue):
     client.disconnect()
 
 
-API_KEY = "lastfm_api_key"
-API_SECRET = "lastfm_api_secret"
-USERNAME = "lastfm_user"
-PASSWORD = "lastfm_pw"
+API_KEY = "your_lastfm_api_key"
+API_SECRET = "your_lastfm_api_secret"
+USERNAME = "your_lastfm_username"
+PASSWORD = "your_lastfm_password"
 
 homepath = os.path.expanduser("~")
 
@@ -188,6 +194,14 @@ while True:
 	# Even with error
 	try:
 		
+		# Define your commands as strings.
+		cmd1 = "sudo find /tmp -maxdepth 1 -type d -name '.com.google.Chrome*' -print0 | xargs -0 rm -rf"
+		cmd2 = "sudo find /tmp -maxdepth 1 -type d -name '.org.chromium*' -print0 | xargs -0 rm -rf"
+
+		# Run the commands.
+		subprocess.run(cmd1, shell=True, check=True)
+		subprocess.run(cmd2, shell=True, check=True)
+
 		# Download sample
 		#os.system('arecord -r 44100 -d 10 -c 2 -t wav --device="hw:0,0"  /mnt/ramdisk/test-mic.wav')	
 		#os.system(f'arecord -d 10 -D {hardware_str} -r 44100 -c 1  /mnt/ramdisk/test-mic.wav')
